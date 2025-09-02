@@ -10,10 +10,10 @@ export interface HammerheadRoute {
   name: any;
 }
 
-export const hammerheadDashboardLogin = async (
+export async function hammerheadDashboardLogin(
   username: string,
   password: string
-): Promise<HammerheadAuthorization> => {
+): Promise<HammerheadAuthorization> {
   const hammerheadLoginResponse = await fetch(
     `https://dashboard.hammerhead.io/v1/auth/token`,
     {
@@ -28,19 +28,22 @@ export const hammerheadDashboardLogin = async (
       }),
     }
   );
-  if (hammerheadLoginResponse.status !== 200)
+  if (hammerheadLoginResponse.status !== 200) {
     throw new Error('Hammerhead Login failed');
-  const hammerheadLoginResult: any = await hammerheadLoginResponse.json();
+  }
+
+  const hammerheadLoginResult: { access_token: string } =
+    await hammerheadLoginResponse.json();
   const jwtToken = jwt.decode(hammerheadLoginResult.access_token);
   return {
     accessToken: hammerheadLoginResult.access_token,
     userId: jwtToken.sub,
   };
-};
+}
 
-export const hammerheadSync = async (
+export async function hammerheadSync(
   hammerheadAuthorization: HammerheadAuthorization
-) => {
+) {
   return await fetch(
     `https://dashboard.hammerhead.io/v1/users/${hammerheadAuthorization.userId}/routes/sync`,
     {
@@ -50,12 +53,12 @@ export const hammerheadSync = async (
       },
     }
   );
-};
+}
 
-export const hammerheadGetRoutes = async (
+export async function hammerheadGetRoutes(
   hammerheadAuthorization: HammerheadAuthorization,
   pageSize = 50
-): Promise<HammerheadRoute[]> => {
+): Promise<HammerheadRoute[]> {
   const routes = [];
   for (let page = 1; ; page++) {
     var routesResponse = await fetch(
@@ -75,13 +78,13 @@ export const hammerheadGetRoutes = async (
     if (!routesResult.paging.next) break;
   }
   return routes;
-};
+}
 
-export const hammerheadUploadRoute = async (
+export async function hammerheadUploadRoute(
   hammerheadAuthorization: HammerheadAuthorization,
   fileName: string,
   buffer: Buffer
-) => {
+) {
   const formData = new FormData();
   formData.append('file', buffer, fileName);
   var uploadResponse = await fetch(
@@ -96,4 +99,4 @@ export const hammerheadUploadRoute = async (
   );
   const uploadResult = await uploadResponse.json();
   return uploadResult;
-};
+}
